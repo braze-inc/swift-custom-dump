@@ -26,23 +26,37 @@
         var rawValue: UNAuthorizationOptions
 
         var customDumpDescription: String {
+          if #available(iOS 12.0, tvOS 12.0, watchOS 5.0, *) {
+            switch self.rawValue {
+            case .criticalAlert:
+              return "UNAuthorizationOptions.criticalAlert"
+            case .providesAppNotificationSettings:
+              return "UNAuthorizationOptions.providesAppNotificationSettings"
+            case .provisional:
+              return "UNAuthorizationOptions.provisional"
+            default:
+              break
+            }
+          }
+
+          #if os(iOS) || os(watchOS)
+          if #available(iOS 13.0, watchOS 6.0, *) {
+            switch self.rawValue {
+            case .announcement:
+              return "UNAuthorizationOptions.announcement"
+            default:
+              break
+            }
+          }
+          #endif
+
           switch self.rawValue {
           case .alert:
             return "UNAuthorizationOptions.alert"
-          #if os(iOS) || os(watchOS)
-            case .announcement:
-              return "UNAuthorizationOptions.announcement"
-          #endif
           case .badge:
             return "UNAuthorizationOptions.badge"
           case .carPlay:
             return "UNAuthorizationOptions.carPlay"
-          case .criticalAlert:
-            return "UNAuthorizationOptions.criticalAlert"
-          case .providesAppNotificationSettings:
-            return "UNAuthorizationOptions.providesAppNotificationSettings"
-          case .provisional:
-            return "UNAuthorizationOptions.provisional"
           case .sound:
             return "UNAuthorizationOptions.sound"
           default:
@@ -57,16 +71,22 @@
         .alert
       ]
       #if os(iOS) || os(watchOS)
-        allCases.append(.announcement)
+        if #available(iOS 13.0, watchOS 6.0, *) {
+          allCases.append(.announcement)
+        }
       #endif
       allCases.append(contentsOf: [
         .badge,
         .carPlay,
-        .criticalAlert,
-        .providesAppNotificationSettings,
-        .provisional,
         .sound,
       ])
+      if #available(iOS 12.0, tvOS 12.0, watchOS 5.0, *) {
+        allCases.append(contentsOf: [
+          .criticalAlert,
+          .providesAppNotificationSettings,
+          .provisional,
+        ])
+      }
       for option in allCases {
         if options.contains(option) {
           children.append(.init(rawValue: option))

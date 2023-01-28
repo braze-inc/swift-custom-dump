@@ -1,16 +1,14 @@
 {
-  "object": {
-    "pins": [
-      {
-        "package": "xctest-dynamic-overlay",
-        "repositoryURL": "https://github.com/pointfreeco/xctest-dynamic-overlay",
-        "state": {
-          "branch": null,
-          "revision": "38bc9242e4388b80bd23ddfdf3071428859e3260",
-          "version": "0.4.0"
-        }
+  "pins" : [
+    {
+      "identity" : "xctest-dynamic-overlay",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/braze-inc/xctest-dynamic-overlay",
+      "state" : {
+        "branch" : "braze",
+        "revision" : "51d581d391a23fe5f14aca3c329fa214914e8692"
       }
-    ]
-  },
-  "version": 1
+    }
+  ],
+  "version" : 2
 }
