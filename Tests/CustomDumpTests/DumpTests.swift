@@ -242,6 +242,20 @@ final class DumpTests: XCTestCase {
       )
       """
     )
+
+    dump = ""
+    customDump(Nested.nest(.fizz(0.9, buzz: "2")), to: &dump)
+    XCTAssertNoDifference(
+      dump,
+      """
+      Nested.nest(
+        .fizz(
+          0.9,
+          buzz: "2"
+        )
+      )
+      """
+    )
   }
 
   func testOptional() {
@@ -395,6 +409,50 @@ final class DumpTests: XCTestCase {
         ()
       )
       """
+    )
+  }
+
+  func testString() {
+    var dump = ""
+    customDump("Hello!", to: &dump)
+    XCTAssertNoDifference(
+      dump,
+      #""Hello!""#
+    )
+
+    dump = ""
+    customDump(#"Hello, "world!""#, to: &dump)
+    XCTAssertNoDifference(
+      dump,
+      ##"#"Hello, "world!""#"##
+    )
+
+    dump = ""
+    customDump(####"This has a "### in it"####, to: &dump)
+    XCTAssertNoDifference(
+      dump,
+      #####"####"This has a "### in it"####"#####
+    )
+
+    dump = ""
+    customDump("This has a \\ in it", to: &dump)
+    XCTAssertNoDifference(
+      dump,
+      ##"#"This has a \ in it"#"##
+    )
+
+    dump = ""
+    customDump("This has no special characters in it", to: &dump)
+    XCTAssertNoDifference(
+      dump,
+      "\"This has no special characters in it\""
+    )
+
+    dump = ""
+    customDump("This has a \t in it", to: &dump)
+    XCTAssertNoDifference(
+      dump,
+      "\"This has a \\t in it\""
     )
   }
 
@@ -608,7 +666,7 @@ final class DumpTests: XCTestCase {
       dump,
       """
       Result.success(
-        Result.success(42)
+        .success(42)
       )
       """
     )

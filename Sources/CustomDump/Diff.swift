@@ -35,11 +35,12 @@ public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String
     lhsName: String?,
     rhsName: String?,
     separator: String,
-    indent: Int
+    indent: Int,
+    isRoot: Bool
   ) -> String {
     let rhsName = rhsName ?? lhsName
     guard !isMirrorEqual(lhs, rhs) else {
-      return _customDump(lhs, name: rhsName, indent: indent, maxDepth: 0)
+      return _customDump(lhs, name: rhsName, indent: indent, isRoot: isRoot, maxDepth: 0)
         .appending(separator)
         .indenting(with: format.both + " ")
     }
@@ -49,8 +50,8 @@ public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String
     var out = ""
 
     func diffEverything() {
-      var lhs = _customDump(lhs, name: lhsName, indent: indent, maxDepth: .max)
-      var rhs = _customDump(rhs, name: rhsName, indent: indent, maxDepth: .max)
+      var lhs = _customDump(lhs, name: lhsName, indent: indent, isRoot: isRoot, maxDepth: .max)
+      var rhs = _customDump(rhs, name: rhsName, indent: indent, isRoot: isRoot, maxDepth: .max)
       if lhs == rhs {
         if lhsMirror.subjectType != rhsMirror.subjectType {
           lhs.append(" as \(typeName(lhsMirror.subjectType))")
@@ -105,6 +106,7 @@ public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String
             lhs,
             name: lhsName,
             indent: indent,
+            isRoot: false,
             maxDepth: 0
           )
           .indenting(with: format.first + " "),
@@ -115,6 +117,7 @@ public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String
             rhs,
             name: rhsName,
             indent: indent,
+            isRoot: false,
             maxDepth: 0
           )
           .indenting(with: format.second + " "),
@@ -131,6 +134,7 @@ public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String
             lhs,
             name: lhsName,
             indent: indent,
+            isRoot: isRoot,
             maxDepth: .max
           )
           .indenting(with: format.first + " "),
@@ -141,6 +145,7 @@ public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String
             rhs,
             name: rhsName,
             indent: indent,
+            isRoot: isRoot,
             maxDepth: .max
           )
           .indenting(with: format.second + " "),
@@ -179,6 +184,7 @@ public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String
               child.value,
               name: child.label,
               indent: indent + elementIndent,
+              isRoot: false,
               maxDepth: 0
             )
             .indenting(with: format.both + " "),
@@ -235,7 +241,8 @@ public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String
               separator: lhsOffset == lhsChildren.count - 1 && rhsOffset == rhsChildren.count - 1
                 ? ""
                 : elementSeparator,
-              indent: indent + elementIndent
+              indent: indent + elementIndent,
+              isRoot: false
             ),
             to: &out
           )
@@ -251,6 +258,7 @@ public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String
               lhsChild.value,
               name: lhsChild.label,
               indent: indent + elementIndent,
+              isRoot: false,
               maxDepth: .max
             )
             .indenting(with: format.first + " "),
@@ -267,6 +275,7 @@ public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String
               rhsChild.value,
               name: rhsChild.label,
               indent: indent + elementIndent,
+              isRoot: false,
               maxDepth: .max
             )
             .indenting(with: format.second + " "),
@@ -302,7 +311,8 @@ public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String
           lhsName: lhsName,
           rhsName: rhsName,
           separator: separator,
-          indent: indent
+          indent: indent,
+          isRoot: isRoot
         )
       )
 
@@ -386,16 +396,16 @@ public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String
             let lhs = $0.value as? (key: AnyHashable, value: Any),
             let rhs = $1.value as? (key: AnyHashable, value: Any)
           else {
-            return _customDump($0.value, name: nil, indent: 0, maxDepth: 1)
-              < _customDump($1.value, name: nil, indent: 0, maxDepth: 1)
+            return _customDump($0.value, name: nil, indent: 0, isRoot: false, maxDepth: 1)
+              < _customDump($1.value, name: nil, indent: 0, isRoot: false, maxDepth: 1)
           }
-          return _customDump(lhs.key.base, name: nil, indent: 0, maxDepth: 1)
-            < _customDump(rhs.key.base, name: nil, indent: 0, maxDepth: 1)
+          return _customDump(lhs.key.base, name: nil, indent: 0, isRoot: false, maxDepth: 1)
+            < _customDump(rhs.key.base, name: nil, indent: 0, isRoot: false, maxDepth: 1)
         }
       ) { child, _ in
         guard let pair = child.value as? (key: AnyHashable, value: Any) else { return }
         child = (
-          _customDump(pair.key.base, name: nil, indent: 0, maxDepth: 1),
+          _customDump(pair.key.base, name: nil, indent: 0, isRoot: false, maxDepth: 1),
           pair.value
         )
       }
@@ -421,7 +431,7 @@ public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String
         ? rhsChildMirror
         : Mirror(rhs, unlabeledChildren: [rhsChild.value], displayStyle: .tuple)
 
-      let subjectType = typeName(lhsMirror.subjectType)
+      let subjectType = isRoot ? typeName(lhsMirror.subjectType) : ""
       diffChildren(
         lhsAssociatedValuesMirror,
         rhsAssociatedValuesMirror,
@@ -453,7 +463,8 @@ public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String
           lhsName: lhsName,
           rhsName: rhsName,
           separator: separator,
-          indent: indent
+          indent: indent,
+          isRoot: isRoot
         )
       )
 
@@ -470,8 +481,8 @@ public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String
           isIdentityEqual($0.value, $1.value) || isMirrorEqual($0.value, $1.value)
         },
         areInIncreasingOrder: {
-          _customDump($0.value, name: nil, indent: 0, maxDepth: 1)
-            < _customDump($1.value, name: nil, indent: 0, maxDepth: 1)
+          _customDump($0.value, name: nil, indent: 0, isRoot: false, maxDepth: 1)
+            < _customDump($1.value, name: nil, indent: 0, isRoot: false, maxDepth: 1)
         }
       )
 
@@ -523,7 +534,10 @@ public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String
               .split(separator: "\n", omittingEmptySubsequences: false)
               .map(Line.init(rawValue:))
         )
-        let hashes = String(repeating: "#", count: max(lhs.hashCount, rhs.hashCount))
+        let hashes = String(
+          repeating: "#",
+          count: max(lhs.hashCount(isMultiline: true), rhs.hashCount(isMultiline: true))
+        )
         diffChildren(
           lhsMirror,
           rhsMirror,
@@ -546,7 +560,7 @@ public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String
 
   guard !isMirrorEqual(lhs, rhs) else { return nil }
 
-  var diff = diffHelp(lhs, rhs, lhsName: nil, rhsName: nil, separator: "", indent: 0)
+  var diff = diffHelp(lhs, rhs, lhsName: nil, rhsName: nil, separator: "", indent: 0, isRoot: true)
   if diff.last == "\n" { diff.removeLast() }
   return diff
 }
