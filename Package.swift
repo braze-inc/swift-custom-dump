@@ -38,3 +38,13 @@ let package = Package(
     ),
   ]
 )
+
+// Enable Library Evolution
+package.targets = package.targets
+  .map { target in
+    if target.name.hasSuffix("Tests") {
+      return target
+    }
+    target.swiftSettings = (target.swiftSettings ?? []) + [.unsafeFlags(["-enable-library-evolution"])]
+    return target
+}
