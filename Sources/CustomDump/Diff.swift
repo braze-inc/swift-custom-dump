@@ -25,6 +25,7 @@
 ///     unchanged lines.
 /// - Returns: A string describing any difference detected between values, or `nil` if no difference
 ///   is detected.
+@available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
 public func diff<T>(_ lhs: T, _ rhs: T, format: DiffFormat = .default) -> String? {
   var visitedItems: Set<ObjectIdentifier> = []
 
